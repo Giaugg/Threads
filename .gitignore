@@ -1,0 +1,78 @@
+# ========================
+# .NET / C#
+# ========================
+bin/
+obj/
+*.user
+*.rsuser
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+
+# Rider / JetBrains
+.idea/
+*.sln.iml
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+
+# ========================
+# ASP.NET Core
+# ========================
+appsettings.Development.json
+appsettings.*.local.json
+
+# Secret files
+secrets.json
+
+# ========================
+# Entity Framework
+# ========================
+*.db
+*.mdf
+*.ldf
+
+# ========================
+# Node (nếu có React FE)
+# ========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ========================
+# OS files
+# ========================
+.DS_Store
+Thumbs.db
+
+# ========================
+# Docker
+# ========================
+docker-compose.override.yml
+
+# ========================
+# Publish
+# ========================
+publish/
+wwwroot/dist/
+
+# ========================
+# Temporary files
+# ========================
+*.tmp
+*.temp
+*.cache
