@@ -1,12 +1,10 @@
-// File: Controllers/NotificationsController.cs
-
 using Microsoft.AspNetCore.Mvc;           // ✅ BẮT BUỘC
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 using Threads.API.Data;
 using Threads.API.Dtos;
 using Threads.API.Entities;
-
-namespace Threads.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -22,11 +20,24 @@ public class NotificationsController : ControllerBase
     [HttpGet("{userId}")]
     public async Task<IActionResult> Get(Guid userId)
     {
-        var noti = await _context.Notifications
+        var data = await _context.Notifications
             .Where(n => n.UserId == userId)
             .OrderByDescending(n => n.CreatedAt)
+            .Take(50)
             .ToListAsync();
 
-        return Ok(noti);
+        return Ok(data);
+    }
+
+    [HttpPut("{id}/read")]
+    public async Task<IActionResult> MarkRead(Guid id)
+    {
+        var noti = await _context.Notifications.FindAsync(id);
+        if (noti == null) return NotFound();
+
+        noti.IsRead = true;
+        await _context.SaveChangesAsync();
+
+        return Ok();
     }
 }

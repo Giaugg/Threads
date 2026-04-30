@@ -16,7 +16,7 @@ public class AppDbContext : DbContext
     public DbSet<Comment> Comments { get; set; }
     public DbSet<Follow> Follows { get; set; }
     public DbSet<Notification> Notifications { get; set; }
-
+    
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -101,5 +101,18 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<Follow>()
             .HasIndex(f => f.FollowingId);
+
+
+        modelBuilder.Entity<Post>()
+            .HasOne(p => p.OriginalPost)
+            .WithMany()
+            .HasForeignKey(p => p.OriginalPostId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Comment>()
+            .HasOne(c => c.ParentComment)
+            .WithMany()
+            .HasForeignKey(c => c.ParentCommentId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

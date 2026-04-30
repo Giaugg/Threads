@@ -35,6 +35,9 @@ namespace Threads.API.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<Guid?>("ParentCommentId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("PostId")
                         .HasColumnType("uniqueidentifier");
 
@@ -42,6 +45,8 @@ namespace Threads.API.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ParentCommentId");
 
                     b.HasIndex("PostId");
 
@@ -124,12 +129,20 @@ namespace Threads.API.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid?>("OriginalPostId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedAt");
+
+                    b.HasIndex("OriginalPostId");
 
                     b.HasIndex("UserId");
 
@@ -172,6 +185,11 @@ namespace Threads.API.Migrations
 
             modelBuilder.Entity("Threads.API.Entities.Comment", b =>
                 {
+                    b.HasOne("Threads.API.Entities.Comment", "ParentComment")
+                        .WithMany()
+                        .HasForeignKey("ParentCommentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Threads.API.Entities.Post", "Post")
                         .WithMany("Comments")
                         .HasForeignKey("PostId")
@@ -183,6 +201,8 @@ namespace Threads.API.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("ParentComment");
 
                     b.Navigation("Post");
 
@@ -238,11 +258,18 @@ namespace Threads.API.Migrations
 
             modelBuilder.Entity("Threads.API.Entities.Post", b =>
                 {
+                    b.HasOne("Threads.API.Entities.Post", "OriginalPost")
+                        .WithMany()
+                        .HasForeignKey("OriginalPostId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Threads.API.Entities.User", "User")
                         .WithMany("Posts")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("OriginalPost");
 
                     b.Navigation("User");
                 });

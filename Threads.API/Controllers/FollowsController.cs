@@ -46,4 +46,13 @@ public class FollowsController : ControllerBase
 
         return Ok();
     }
+
+    [HttpGet("check")]
+    public async Task<IActionResult> CheckFollow(Guid followerId, Guid followingId)
+    {
+        var isFollow = await _context.Follows
+            .AnyAsync(f => f.FollowerId == followerId && f.FollowingId == followingId);
+
+        return Ok(isFollow);
+    }
 }

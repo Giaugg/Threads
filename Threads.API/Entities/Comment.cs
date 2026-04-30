@@ -14,4 +14,7 @@ public class Comment
 
     public User User { get; set; }
     public Post Post { get; set; }
+
+    public Guid? ParentCommentId { get; set; }
+    public Comment? ParentComment { get; set; }
 }

@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* nền */
+body {
+  background: #101010;
+  color: #fff;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+/* scrollbar giống threads */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: #222;
+  border-radius: 10px;
+}
+
+/* hiệu ứng button */
+button {
+  transition: all 0.2s ease;
+}
