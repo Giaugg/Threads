@@ -15,10 +15,12 @@ namespace Threads.API.Controllers;
 public class PostsController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly NotificationService _notificationService;
 
-    public PostsController(AppDbContext context)
+    public PostsController(AppDbContext context, NotificationService notificationService)
     {
         _context = context;
+        _notificationService = notificationService;
     }
 
     // GET all posts
@@ -113,6 +115,24 @@ public class PostsController : ControllerBase
 
         _context.Posts.Add(repost);
         await _context.SaveChangesAsync();
+
+        // 🔔 Send notification to original post author
+        var originalPost = await _context.Posts
+            .Include(p => p.User)
+            .FirstOrDefaultAsync(p => p.Id == id);
+        
+        var reposter = await _context.Users.FindAsync(userId);
+
+        if (originalPost != null && originalPost.UserId != userId && reposter != null)
+        {
+            await _notificationService.SendAsync(
+                originalPost.UserId,
+                "repost",
+                $"{reposter.Username} đã chia sẻ bài viết của bạn",
+                userId,
+                id
+            );
+        }
 
         return Ok(repost);
     }

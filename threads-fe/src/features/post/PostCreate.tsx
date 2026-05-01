@@ -1,10 +1,12 @@
 import { useState, type ChangeEvent } from "react";
 import { useAuth } from "../auth/AuthContext";
+import { useToast } from "../../core/hooks/useToast";
 import { createPostAPI, uploadImageAPI } from "./api";
 import PostImageUpload from "../../shared/components/PostImageUpload";
 
 export default function PostCreate({ onCreated }: any) {
   const { user } = useAuth();
+  const toast = useToast();
   const [content, setContent] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -13,12 +15,13 @@ export default function PostCreate({ onCreated }: any) {
 
   const handleCreate = async () => {
     if (!content.trim() && !imageFile) {
-      setError("Please add some content or an image");
+      toast.error("Vui lòng nhập nội dung hoặc chọn ảnh");
       return;
     }
 
     setError("");
     setLoading(true);
+    const loadingId = toast.loading("Đang đăng bài...");
 
     try {
       let imageUrl: string | undefined;
@@ -29,6 +32,8 @@ export default function PostCreate({ onCreated }: any) {
       }
 
       const res = await createPostAPI({ content, imageUrl });
+      toast.dismiss(loadingId);
+      toast.success("Bài viết đã được đăng thành công", { duration: 3000 });
       onCreated(res.data);
       
       // Reset form
@@ -36,7 +41,9 @@ export default function PostCreate({ onCreated }: any) {
       setImageFile(null);
       setPreviewUrl(null);
     } catch (err: any) {
-      const errorMessage = err?.response?.data?.message || "Failed to create post";
+      const errorMessage = err?.response?.data?.message || "Lỗi khi đăng bài";
+      toast.dismiss(loadingId);
+      toast.error(errorMessage);
       setError(errorMessage);
     } finally {
       setLoading(false);

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
 using Threads.API.Data;
+using Threads.API.Hubs;
 
 public class NotificationService
 {

@@ -122,7 +122,6 @@ export default function PostCard({
             >
               <MessageCircle size={18} strokeWidth={1.5} />
               <span className="text-xs group-hover:text-white">
-                {post.commentsCount || 0}
               </span>
             </button>
 

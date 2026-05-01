@@ -3,10 +3,12 @@
 import { useContext, useState } from "react";
 import { AuthContext } from "./AuthContext";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "../../core/hooks/useToast";
 
 export default function Register() {
   const { register } = useContext(AuthContext);
   const navigate = useNavigate();
+  const toast = useToast();
 
   const [form, setForm] = useState({
     username: "",
@@ -14,35 +16,86 @@ export default function Register() {
     password: "",
   });
 
+  const [loading, setLoading] = useState(false);
+
   const handleRegister = async () => {
-    await register(form);
-    navigate("/");
+    if (!form.username || !form.email || !form.password) {
+      toast.error("Vui lòng điền đầy đủ thông tin");
+      return;
+    }
+
+    if (form.password.length < 6) {
+      toast.error("Mật khẩu phải có ít nhất 6 ký tự");
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const loadingId = toast.loading("Đang đăng ký...");
+      await register(form);
+      toast.dismiss(loadingId);
+      toast.success("Đăng ký thành công!");
+      navigate("/");
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Lỗi đăng ký");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div>
-      <h2>Register</h2>
+    <div className="min-h-screen flex items-center justify-center bg-black">
+      <div className="w-[350px] space-y-4">
+        <h2 className="text-2xl font-bold text-center">Đăng Ký</h2>
 
-      <input placeholder="Username"
-        onChange={(e) =>
-          setForm({ ...form, username: e.target.value })
-        }
-      />
+        <input
+          placeholder="Tên người dùng"
+          className="w-full p-3 bg-[#121212] border border-threadBorder rounded-lg text-white"
+          disabled={loading}
+          onChange={(e) =>
+            setForm({ ...form, username: e.target.value })
+          }
+        />
 
-      <input placeholder="Email"
-        onChange={(e) =>
-          setForm({ ...form, email: e.target.value })
-        }
-      />
+        <input
+          placeholder="Email"
+          className="w-full p-3 bg-[#121212] border border-threadBorder rounded-lg text-white"
+          type="email"
+          disabled={loading}
+          onChange={(e) =>
+            setForm({ ...form, email: e.target.value })
+          }
+        />
 
-      <input type="password"
-        placeholder="Password"
-        onChange={(e) =>
-          setForm({ ...form, password: e.target.value })
-        }
-      />
+        <input
+          type="password"
+          placeholder="Mật khẩu (ít nhất 6 ký tự)"
+          className="w-full p-3 bg-[#121212] border border-threadBorder rounded-lg text-white"
+          disabled={loading}
+          onChange={(e) =>
+            setForm({ ...form, password: e.target.value })
+          }
+        />
 
-      <button onClick={handleRegister}>Register</button>
+        <button
+          onClick={handleRegister}
+          disabled={loading}
+          className="w-full bg-white text-black py-2 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-200 transition"
+        >
+          {loading ? "Đang đăng ký..." : "Đăng Ký"}
+        </button>
+
+        <p className="text-center text-gray-400 text-sm">
+          Đã có tài khoản?{" "}
+          <button
+            onClick={() => navigate("/login")}
+            className="text-blue-500 hover:text-blue-400 font-semibold"
+          >
+            Đăng nhập
+          </button>
+        </p>
+      </div>
     </div>
   );
 }

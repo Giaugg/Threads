@@ -8,6 +8,7 @@ using System.Text;
 using Threads.API.Data;
 using Threads.API.Services;
 using Threads.API.Data.Seed;
+using Threads.API.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -98,6 +99,13 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.AddScoped<NotificationService>();
+
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler =
+            System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
 
 var app = builder.Build();
 

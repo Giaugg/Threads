@@ -6,6 +6,7 @@ import Login from "../features/auth/Login";
 import Register from "../features/auth/Register";
 import ProtectedRoute from "./ProtectedRoute";
 import ProfilePage from "../features/profile/ProfilePage";
+import ActivityPage from "../pages/ActivityPage";
 
 export default function Router() {
   return (
@@ -21,6 +22,16 @@ export default function Router() {
           element={
             <ProtectedRoute>
               <Feed />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Activity Page */}
+        <Route
+          path="/activity"
+          element={
+            <ProtectedRoute>
+              <ActivityPage />
             </ProtectedRoute>
           }
         />

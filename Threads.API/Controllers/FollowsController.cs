@@ -13,10 +13,12 @@ namespace Threads.API.Controllers;
 public class FollowsController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly NotificationService _notificationService;
 
-    public FollowsController(AppDbContext context)
+    public FollowsController(AppDbContext context, NotificationService notificationService)
     {
         _context = context;
+        _notificationService = notificationService;
     }
 
     [HttpPost]
@@ -30,6 +32,18 @@ public class FollowsController : ControllerBase
 
         _context.Follows.Add(follow);
         await _context.SaveChangesAsync();
+
+        // 🔔 Send notification to the followed user
+        var follower = await _context.Users.FindAsync(followerId);
+        if (follower != null)
+        {
+            await _notificationService.SendAsync(
+                followingId,
+                "follow",
+                $"{follower.Username} đã theo dõi bạn",
+                followerId
+            );
+        }
 
         return Ok();
     }

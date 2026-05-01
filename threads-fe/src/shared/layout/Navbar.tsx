@@ -118,40 +118,81 @@ export default function Navbar() {
         <div className="flex items-center gap-2 relative" ref={menuRef}>
 
           {/* 🔔 NOTIFICATION */}
-          <button
-            onClick={() => setShowNoti(!showNoti)}
-            className="relative p-2 text-gray-400 hover:text-white"
-          >
-            {notifications.length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-[10px] px-1 rounded-full">
-                {notifications.length}
-              </span>
-            )}
-            <Bell size={22} />
-          </button>
-
-          {showNoti && (
-            <div className="absolute right-0 w-80 bg-black border">
-              {notifications.length === 0 ? (
-                <div className="p-3 text-gray-500">No notifications</div>
-              ) : (
-                notifications.map((n) => (
-                  <div
-                    key={n.id}
-                    onClick={() => {
-                      if (n.postId) navigate(`/post/${n.postId}`);
-                    }}
-                    className="p-3 border-b cursor-pointer"
-                  >
-                    <div>{n.message}</div>
-                    <div className="text-xs text-gray-500">
-                      {new Date(n.createdAt).toLocaleString("vi-VN")}
-                    </div>
-                  </div>
-                ))
+          <div className="relative">
+            <button
+              onClick={() => setShowNoti(!showNoti)}
+              className="relative p-2 text-gray-400 hover:text-white transition"
+            >
+              {notifications.length > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-[10px] px-1.5 rounded-full font-semibold">
+                  {notifications.length > 99 ? "99+" : notifications.length}
+                </span>
               )}
-            </div>
-          )}
+              <Bell size={22} />
+            </button>
+
+            {showNoti && (
+              <div className="absolute -right-2 top-12 w-96 bg-[#121212] border border-[#1A1A1A] rounded-xl shadow-2xl overflow-hidden z-50">
+                {/* HEADER */}
+                <div className="px-4 py-3 border-b border-[#1A1A1A] bg-[#0A0A0A]">
+                  <h3 className="text-sm font-semibold">Thông báo</h3>
+                </div>
+
+                {/* NOTIFICATIONS LIST */}
+                {notifications.length > 0 ? (
+                  <div className="max-h-96 overflow-y-auto">
+                    {notifications.slice(0, 8).map((n) => (
+                      <div
+                        key={n.id}
+                        className={`px-4 py-3 border-b border-[#1A1A1A] hover:bg-[#1A1A1A] transition cursor-pointer ${
+                          !n.isRead ? "bg-[#111111]" : ""
+                        }`}
+                      >
+                        <div className="flex gap-2">
+                          <div className="text-lg mt-0.5">
+                            {["follow"].includes(n.type)
+                              ? "👤"
+                              : ["like"].includes(n.type)
+                                ? "❤️"
+                                : ["comment"].includes(n.type)
+                                  ? "💬"
+                                  : ["repost"].includes(n.type)
+                                    ? "🔄"
+                                    : "📢"}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm text-gray-200 break-words">
+                              {n.message}
+                            </p>
+                            <p className="text-xs text-gray-600 mt-1">
+                              {new Date(n.createdAt).toLocaleString("vi-VN")}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="px-4 py-8 text-center text-sm text-gray-500">
+                    Không có thông báo nào
+                  </div>
+                )}
+
+                {/* FOOTER - SEE ALL BUTTON */}
+                <div className="px-4 py-3 border-t border-[#1A1A1A] bg-[#0A0A0A]">
+                  <button
+                    onClick={() => {
+                      navigate("/activity");
+                      setShowNoti(false);
+                    }}
+                    className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition"
+                  >
+                    Xem tất cả thông báo
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
 
           {/* THEME */}
           <button

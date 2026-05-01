@@ -8,6 +8,7 @@ import {
   onReceiveNotification,
 } from "../../core/socket/notification";
 import { getNotificationsAPI } from "../notification/api";
+import { useToast } from "../../core/hooks/useToast";
 
 interface AuthContextType {
   user: User | null;
@@ -27,6 +28,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [notifications, setNotifications] = useState<any[]>([]);
+  const toast = useToast();
 
   // LOGIN
   const login = async (data: LoginDto) => {
@@ -69,20 +71,41 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (!user) return;
 
-    // load initial
-    getNotificationsAPI(user.id).then(res => {
+    let conn: any;
+
+    const setup = async () => {
+      const res = await getNotificationsAPI(user.id);
       setNotifications(res.data);
-    });
 
-    // realtime
-    startConnection(user.id);
+      conn = await startConnection(user.id);
 
-    const unsubscribe = onReceiveNotification((data) => {
-      setNotifications(prev => [data, ...prev]);
-    });
+      const handler = (data: any) => {
+        setNotifications(prev => [data, ...prev]);
 
-    return () => unsubscribe?.();
-  }, [user]);
+        const emojis: Record<string, string> = {
+          follow: "👤",
+          like: "❤️",
+          comment: "💬",
+          repost: "🔄",
+        };
+
+        toast.success(`${emojis[data.type] || "📢"} ${data.message}`, {
+          duration: 5000,
+        });
+      };
+
+      conn.on("ReceiveNotification", handler);
+    };
+
+    setup();
+
+    return () => {
+      if (conn) {
+        conn.off("ReceiveNotification");
+        conn.stop();
+      }
+    };
+  }, [user?.id]); // 👈 FIX
 
   return (
     <AuthContext.Provider

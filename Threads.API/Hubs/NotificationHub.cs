@@ -1,9 +1,12 @@
 using Microsoft.AspNetCore.SignalR;
 
-public class NotificationHub : Hub
+namespace Threads.API.Hubs // ✅ THÊM DÒNG NÀY
 {
-    public async Task JoinUserGroup(string userId)
+    public class NotificationHub : Hub
     {
-        await Groups.AddToGroupAsync(Context.ConnectionId, userId);
+        public async Task JoinUserGroup(string userId)
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, userId);
+        }
     }
 }

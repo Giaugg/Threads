@@ -15,10 +15,12 @@ namespace Threads.API.Controllers;
 public class LikesController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly NotificationService _notificationService;
 
-    public LikesController(AppDbContext context)
+    public LikesController(AppDbContext context, NotificationService notificationService)
     {
         _context = context;
+        _notificationService = notificationService;
     }
 
     [Authorize]
@@ -34,6 +36,21 @@ public class LikesController : ControllerBase
 
         _context.Likes.Add(like);
         await _context.SaveChangesAsync();
+
+        // 🔔 Send notification to post author
+        var post = await _context.Posts.Include(p => p.User).FirstOrDefaultAsync(p => p.Id == postId);
+        var likeUser = await _context.Users.FindAsync(userId);
+        
+        if (post != null && post.UserId != userId && likeUser != null)
+        {
+            await _notificationService.SendAsync(
+                post.UserId,
+                "like",
+                $"{likeUser.Username} đã thích bài viết của bạn",
+                userId,
+                postId
+            );
+        }
 
         var likesCount = await _context.Likes.CountAsync(l => l.PostId == postId);
 

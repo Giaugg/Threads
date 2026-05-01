@@ -1,16 +1,19 @@
 import { useEffect, useState } from "react";
 import { getCommentsAPI, createCommentAPI, getRepliesAPI } from "./api";
-import { timeAgo } from "../../core/utils";
+import { useToast } from "../../core/hooks/useToast";
+import { timeAgo, timeAgoVN } from "../../core/utils";
 
 export default function PostModal({
   post,
   onClose,
 }: any) {
+  const toast = useToast();
   const [comments, setComments] = useState<any[]>([]);
   const [content, setContent] = useState("");
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState("");
   const [replies, setReplies] = useState<Record<string, any[]>>({});
+  const [loadingCommentId, setLoadingCommentId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchComments();
@@ -29,32 +32,62 @@ export default function PostModal({
   };
 
   const handleComment = async () => {
-    if (!content.trim()) return;
+    if (!content.trim()) {
+      toast.error("Vui lòng nhập nội dung bình luận");
+      return;
+    }
 
-    const res = await createCommentAPI({
-      postId: post.id,
-      content,
-    });
+    setLoadingCommentId("main");
+    const loadingId = toast.loading("Đang gửi bình luận...");
 
-    setComments([res.data, ...comments]);
-    setContent("");
+    try {
+      const res = await createCommentAPI({
+        postId: post.id,
+        content,
+      });
+
+      setComments([res.data, ...comments]);
+      setContent("");
+      toast.dismiss(loadingId);
+      toast.success("Bình luận thành công", { duration: 2000 });
+    } catch (error: any) {
+      toast.dismiss(loadingId);
+      toast.error(error?.response?.data?.message || "Lỗi khi gửi bình luận");
+    } finally {
+      setLoadingCommentId(null);
+    }
   };
 
   const handleReply = async (parentId: string) => {
-    if (!replyContent.trim()) return;
+    if (!replyContent.trim()) {
+      toast.error("Vui lòng nhập nội dung trả lời");
+      return;
+    }
 
-    const res = await createCommentAPI({
-      postId: post.id,
-      content: replyContent,
-      parentCommentId: parentId,
-    });
+    setLoadingCommentId(parentId);
+    const loadingId = toast.loading("Đang gửi trả lời...");
 
-    setReplies({
-      ...replies,
-      [parentId]: [res.data, ...(replies[parentId] || [])],
-    });
-    setReplyTo(null);
-    setReplyContent("");
+    try {
+      const res = await createCommentAPI({
+        postId: post.id,
+        content: replyContent,
+        parentCommentId: parentId,
+      });
+
+      setReplies({
+        ...replies,
+        [parentId]: [res.data, ...(replies[parentId] || [])],
+      });
+      setReplyTo(null);
+      setReplyContent("");
+      toast.dismiss(loadingId);
+      toast.success("Trả lời thành công", { duration: 2000 });
+    } catch (error: any) {
+      toast.dismiss(loadingId);
+      toast.error(error?.response?.data?.message || "Lỗi khi gửi trả lời");
+    } finally {
+      setLoadingCommentId(null);
+    }
   };
 
   const renderComment = (c: any, isReply = false) => (
@@ -65,7 +98,7 @@ export default function PostModal({
       <div className="flex items-center justify-between gap-3 mb-2">
         <div>
           <div className="text-sm font-semibold">{c.user?.username || "Unknown"}</div>
-          <div className="text-[11px] text-gray-500">{timeAgo(c.createdAt)}</div>
+          <div className="text-[11px] text-gray-500">{timeAgoVN(c.createdAt)}</div>
         </div>
         {!isReply && (
           <button
@@ -128,7 +161,7 @@ export default function PostModal({
           <div className="flex items-center justify-between gap-4 mb-4">
             <div>
               <div className="text-sm text-gray-400">{post.user?.username}</div>
-              <div className="text-xs text-gray-500">{timeAgo(post.createdAt)}</div>
+              <div className="text-xs text-gray-500">{timeAgoVN(post.createdAt)}</div>
             </div>
           </div>
           <p className="text-base leading-relaxed text-gray-100">{post.content}</p>

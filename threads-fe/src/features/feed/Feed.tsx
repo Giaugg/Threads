@@ -14,8 +14,6 @@ export default function Feed() {
     setPosts(posts.map((p) => (p.id === updatedPost.id ? updatedPost : p)));
   };
 
-  console.log("Rendering Feed with posts:", posts);
-
   return (
     <MainLayout>
       <PostCreate onCreated={handleNewPost} />

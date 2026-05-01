@@ -14,10 +14,12 @@ namespace Threads.API.Controllers;
 public class CommentsController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly NotificationService _notificationService;
 
-    public CommentsController(AppDbContext context)
+    public CommentsController(AppDbContext context, NotificationService notificationService)
     {
         _context = context;
+        _notificationService = notificationService;
     }
 
     [HttpPost]
@@ -48,6 +50,21 @@ public class CommentsController : ControllerBase
         _context.Comments.Add(comment);
         await _context.SaveChangesAsync();
 
+        // 🔔 Send notification to post author
+        var post = await _context.Posts.Include(p => p.User).FirstOrDefaultAsync(p => p.Id == dto.PostId);
+        var commenter = await _context.Users.FindAsync(userGuid);
+
+        if (post != null && post.UserId != userGuid && commenter != null)
+        {
+            await _notificationService.SendAsync(
+                post.UserId,
+                "comment",
+                $"{commenter.Username} đã bình luận bài viết của bạn",
+                userGuid,
+                dto.PostId
+            );
+        }
+
         return Ok(comment);
     }
 
@@ -66,6 +83,27 @@ public class CommentsController : ControllerBase
 
         _context.Comments.Add(comment);
         await _context.SaveChangesAsync();
+
+        // 🔔 Send notification to parent comment author
+        if (dto.ParentCommentId.HasValue && dto.ParentCommentId != Guid.Empty)
+        {
+            var parentComment = await _context.Comments
+                .Include(c => c.User)
+                .FirstOrDefaultAsync(c => c.Id == dto.ParentCommentId);
+
+            var replier = await _context.Users.FindAsync(dto.UserId);
+            
+            if (parentComment != null && parentComment.UserId != dto.UserId && replier != null)
+            {
+                await _notificationService.SendAsync(
+                    parentComment.UserId,
+                    "comment",
+                    $"{replier.Username} đã trả lời bình luận của bạn",
+                    dto.UserId,
+                    dto.PostId
+                );
+            }
+        }
 
         var savedComment = await _context.Comments
             .Include(c => c.User)
