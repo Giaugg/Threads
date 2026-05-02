@@ -8,7 +8,7 @@ export interface Post {
   imageUrl?: string;
   user?: User;
   createdAt: string;
-
+  hashtags?: string[]; // ✅ Thêm dòng này
   likesCount?: number;
   isLiked?: boolean;
   commentsCount?: number;

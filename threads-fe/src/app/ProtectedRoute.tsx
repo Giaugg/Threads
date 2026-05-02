@@ -1,19 +1,29 @@
-// File: app/ProtectedRoute.tsx
-
 import { useContext } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { AuthContext } from "../features/auth/AuthContext";
 
-export default function ProtectedRoute({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const { user } = useContext(AuthContext);
+interface Props {
+  adminOnly?: boolean;
+}
 
+export default function ProtectedRoute({ adminOnly = false }: Props) {
+  const { user } = useContext(AuthContext);
+  const location = useLocation();
+
+  // ❌ chưa login
   if (!user) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
   }
 
-  return children;
+  // 🔐 route admin nhưng user không phải admin
+  if (adminOnly && user.username !== "admin") {
+    return <Navigate to="/" replace />;
+  }
+
+  // 🔥 auto redirect admin (CHỈ khi vào root)
+  if (user.username === "admin" && location.pathname === "/") {
+    return <Navigate to="/admin" replace />;
+  }
+
+  return <Outlet />;
 }

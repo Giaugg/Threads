@@ -1,10 +1,9 @@
 // File: features/post/api.ts
 
 import api from "../../core/api/api";
-import type { Post } from "./types";
 
-export const getPostsAPI = () =>
-  api.get<Post[]>("/posts");
+export const getPostsAPI = (page: number, size: number = 10) => 
+  api.get(`/posts?pageNumber=${page}&pageSize=${size}`);
 
 export const uploadImageAPI = (file: File) => {
   const formData = new FormData();

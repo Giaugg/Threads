@@ -1,0 +1,78 @@
+.repost-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.repost-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #666;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.repost-button:hover {
+  border-color: #0066cc;
+  color: #0066cc;
+  background: #f0f8ff;
+}
+
+.repost-button.reposted {
+  background: #e8f5e9;
+  border-color: #4caf50;
+  color: #4caf50;
+}
+
+.repost-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.repost-input-container {
+  display: flex;
+  gap: 8px;
+  background: #f9f9f9;
+  padding: 8px;
+  border-radius: 6px;
+}
+
+.repost-input-container input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.repost-input-container input:focus {
+  outline: none;
+  border-color: #0066cc;
+}
+
+.repost-input-container button {
+  padding: 8px 12px;
+  background: #0066cc;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.repost-input-container button:hover:not(:disabled) {
+  background: #0052a3;
+}
+
+.repost-input-container button:disabled {
+  background: #ccc;
+}

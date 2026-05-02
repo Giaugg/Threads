@@ -14,6 +14,7 @@ public static class SeedData
 
         // ===== USERS =====
         var users = new List<User>();
+        var passwordHash = BCrypt.Net.BCrypt.HashPassword("123456"); // In production, use a proper hashing mechanism
 
         for (int i = 1; i <= 20; i++)
         {
@@ -22,7 +23,7 @@ public static class SeedData
                 Id = Guid.NewGuid(),
                 Username = $"user{i}",
                 Email = $"user{i}@gmail.com",
-                PasswordHash = "123",
+                PasswordHash = passwordHash,
                 AvatarUrl = $"https://i.pravatar.cc/150?img={i}",
                 Bio = $"This is user{i}'s bio.",
                 CreatedAt = DateTime.UtcNow

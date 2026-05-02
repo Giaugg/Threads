@@ -15,6 +15,15 @@ public class Post
 
     public ICollection<Like> Likes { get; set; }
     public ICollection<Comment> Comments { get; set; }
+    
+    // Pictures relationship
+    public ICollection<Picture> Pictures { get; set; }
+
+    // Hashtags many-to-many relationship
+    public ICollection<PostHashtag> PostHashtags { get; set; }
+
+    // Repost relationship
+    public ICollection<Repost> Reposts { get; set; }
 
     public Guid? OriginalPostId { get; set; }
     public Post? OriginalPost { get; set; }

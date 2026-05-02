@@ -226,11 +226,6 @@ public class UsersController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> Update(Guid id, UpdateUserDto dto)
     {
-        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        if (currentUserId != id.ToString())
-            return Forbid();
-
         var user = await _context.Users.FindAsync(id);
         if (user == null) return NotFound();
 

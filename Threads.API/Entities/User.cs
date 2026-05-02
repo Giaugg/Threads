@@ -22,4 +22,10 @@ public class User
     public ICollection<Follow> Following { get; set; }
 
     public ICollection<Notification> Notifications { get; set; }
+    
+    // Reposts relationship
+    public ICollection<Repost> Reposts { get; set; }
+    
+    // Stories relationship
+    public ICollection<Story> Stories { get; set; }
 }

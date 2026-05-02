@@ -11,4 +11,5 @@ public class PostDto
 
     public int LikesCount { get; set; }
     public bool IsLiked { get; set; }
+    public List<string> Hashtags { get; set; } = new();
 }

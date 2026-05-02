@@ -99,6 +99,9 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<HashtagService>();
+builder.Services.AddScoped<RepostService>();
+builder.Services.AddScoped<StoryService>();
 
 builder.Services.AddControllers()
     .AddJsonOptions(options =>

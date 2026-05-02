@@ -16,6 +16,12 @@ public class AppDbContext : DbContext
     public DbSet<Comment> Comments { get; set; }
     public DbSet<Follow> Follows { get; set; }
     public DbSet<Notification> Notifications { get; set; }
+    public DbSet<Hashtag> Hashtags { get; set; }
+    public DbSet<PostHashtag> PostHashtags { get; set; }
+    public DbSet<Picture> Pictures { get; set; }
+    public DbSet<Repost> Reposts { get; set; }
+    public DbSet<Story> Stories { get; set; }
+    public DbSet<StoryHashtag> StoryHashtags { get; set; }
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -51,20 +57,31 @@ public class AppDbContext : DbContext
         // ========================
         // LIKE (many-to-many)
         // ========================
-        modelBuilder.Entity<Like>()
-            .HasKey(l => new { l.UserId, l.PostId });
+        modelBuilder.Entity<Like>(entity =>
+            {
+                // Khai báo Id là khóa chính
+                entity.HasKey(l => l.Id);
 
-        modelBuilder.Entity<Like>()
-            .HasOne(l => l.User)
-            .WithMany(u => u.Likes)
-            .HasForeignKey(l => l.UserId)
-            .OnDelete(DeleteBehavior.Restrict); // ✅
+                // Quan hệ với User (Bắt buộc)
+                entity.HasOne(l => l.User)
+                    .WithMany(u => u.Likes)
+                    .HasForeignKey(l => l.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
-        modelBuilder.Entity<Like>()
-            .HasOne(l => l.Post)
-            .WithMany(p => p.Likes)
-            .HasForeignKey(l => l.PostId)
-            .OnDelete(DeleteBehavior.Cascade);
+                // Quan hệ với Post (Không bắt buộc - IsRequired(false))
+                entity.HasOne(l => l.Post)
+                    .WithMany(p => p.Likes)
+                    .HasForeignKey(l => l.PostId)
+                    .IsRequired(false) 
+                    .OnDelete(DeleteBehavior.Restrict); // Dùng Restrict để tránh lỗi Multiple Cascade Paths
+
+                // Quan hệ với Story (Không bắt buộc - IsRequired(false))
+                entity.HasOne(l => l.Story)
+                    .WithMany(s => s.Likes)
+                    .HasForeignKey(l => l.StoryId)
+                    .IsRequired(false)
+                    .OnDelete(DeleteBehavior.Restrict);
+            });
 
         // ========================
         // COMMENT
@@ -114,5 +131,106 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(c => c.ParentCommentId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        // ========================
+        // PICTURE
+        // ========================
+        modelBuilder.Entity<Picture>()
+            .HasOne(pic => pic.Post)
+            .WithMany(p => p.Pictures)
+            .HasForeignKey(pic => pic.PostId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // ========================
+        // HASHTAG (many-to-many with Post)
+        // ========================
+        modelBuilder.Entity<PostHashtag>()
+            .HasKey(ph => new { ph.PostId, ph.HashtagId });
+
+        modelBuilder.Entity<PostHashtag>()
+            .HasOne(ph => ph.Post)
+            .WithMany(p => p.PostHashtags)
+            .HasForeignKey(ph => ph.PostId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<PostHashtag>()
+            .HasOne(ph => ph.Hashtag)
+            .WithMany(h => h.PostHashtags)
+            .HasForeignKey(ph => ph.HashtagId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // ========================
+        // REPOST
+        // ========================
+        modelBuilder.Entity<Repost>()
+            .HasOne(r => r.User)
+            .WithMany(u => u.Reposts)
+            .HasForeignKey(r => r.UserId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        modelBuilder.Entity<Repost>()
+            .HasOne(r => r.OriginalPost)
+            .WithMany(p => p.Reposts)
+            .HasForeignKey(r => r.OriginalPostId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // ========================
+        // STORY (many-to-many with Hashtag)
+        // ========================
+        modelBuilder.Entity<Story>()
+            .HasOne(s => s.User)
+            .WithMany(u => u.Stories)
+            .HasForeignKey(s => s.UserId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<StoryHashtag>()
+            .HasKey(sh => new { sh.StoryId, sh.HashtagId });
+
+        modelBuilder.Entity<StoryHashtag>()
+            .HasOne(sh => sh.Story)
+            .WithMany(s => s.StoryHashtags)
+            .HasForeignKey(sh => sh.StoryId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<StoryHashtag>()
+            .HasOne(sh => sh.Hashtag)
+            .WithMany(h => h.StoryHashtags)
+            .HasForeignKey(sh => sh.HashtagId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // ========================
+        // INDEXES FOR NEW ENTITIES
+        // ========================
+        modelBuilder.Entity<Hashtag>()
+            .HasIndex(h => h.Name)
+            .IsUnique();
+
+        modelBuilder.Entity<Picture>()
+            .HasIndex(p => p.PostId);
+
+        modelBuilder.Entity<Repost>()
+            .HasIndex(r => r.UserId);
+
+        modelBuilder.Entity<Repost>()
+            .HasIndex(r => r.OriginalPostId);
+
+        modelBuilder.Entity<Story>()
+            .HasIndex(s => s.UserId);
+
+        modelBuilder.Entity<Story>()
+            .HasIndex(s => s.ExpiresAt);
+
+        // LIKE -> STORY
+        modelBuilder.Entity<Like>()
+            .HasOne(l => l.Story)
+            .WithMany(s => s.Likes)
+            .HasForeignKey(l => l.StoryId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+        modelBuilder.Entity<Post>()
+        .HasOne<User>()
+        .WithMany()
+        .HasForeignKey(p => p.RepostUserId)
+        .OnDelete(DeleteBehavior.Restrict);
     }
 }

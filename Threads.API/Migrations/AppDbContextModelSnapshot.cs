@@ -108,19 +108,78 @@ namespace Threads.API.Migrations
                     b.ToTable("Follows");
                 });
 
+            modelBuilder.Entity("Threads.API.Entities.Hashtag", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Hashtags");
+                });
+
             modelBuilder.Entity("Threads.API.Entities.Like", b =>
                 {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("PostId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("StoryId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PostId");
+
+                    b.HasIndex("StoryId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Likes");
+                });
+
+            modelBuilder.Entity("Threads.API.Entities.Picture", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
 
                     b.Property<Guid>("PostId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.HasKey("UserId", "PostId");
+                    b.Property<string>("PublicId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Url")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("PostId");
 
-                    b.ToTable("Likes");
+                    b.ToTable("Pictures");
                 });
 
             modelBuilder.Entity("Threads.API.Entities.Post", b =>
@@ -154,9 +213,99 @@ namespace Threads.API.Migrations
 
                     b.HasIndex("OriginalPostId");
 
+                    b.HasIndex("RepostUserId");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("Posts");
+                });
+
+            modelBuilder.Entity("Threads.API.Entities.PostHashtag", b =>
+                {
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("HashtagId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("PostId", "HashtagId");
+
+                    b.HasIndex("HashtagId");
+
+                    b.ToTable("PostHashtags");
+                });
+
+            modelBuilder.Entity("Threads.API.Entities.Repost", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Caption")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("OriginalPostId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OriginalPostId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Reposts");
+                });
+
+            modelBuilder.Entity("Threads.API.Entities.Story", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExpiresAt");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Stories");
+                });
+
+            modelBuilder.Entity("Threads.API.Entities.StoryHashtag", b =>
+                {
+                    b.Property<Guid>("StoryId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("HashtagId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("StoryId", "HashtagId");
+
+                    b.HasIndex("HashtagId");
+
+                    b.ToTable("StoryHashtags");
                 });
 
             modelBuilder.Entity("Threads.API.Entities.User", b =>
@@ -252,18 +401,35 @@ namespace Threads.API.Migrations
                     b.HasOne("Threads.API.Entities.Post", "Post")
                         .WithMany("Likes")
                         .HasForeignKey("PostId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Threads.API.Entities.Story", "Story")
+                        .WithMany("Likes")
+                        .HasForeignKey("StoryId")
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("Threads.API.Entities.User", "User")
                         .WithMany("Likes")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Post");
 
+                    b.Navigation("Story");
+
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Threads.API.Entities.Picture", b =>
+                {
+                    b.HasOne("Threads.API.Entities.Post", "Post")
+                        .WithMany("Pictures")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Post");
                 });
 
             modelBuilder.Entity("Threads.API.Entities.Post", b =>
@@ -271,6 +437,11 @@ namespace Threads.API.Migrations
                     b.HasOne("Threads.API.Entities.Post", "OriginalPost")
                         .WithMany()
                         .HasForeignKey("OriginalPostId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Threads.API.Entities.User", null)
+                        .WithMany()
+                        .HasForeignKey("RepostUserId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("Threads.API.Entities.User", "User")
@@ -284,11 +455,99 @@ namespace Threads.API.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("Threads.API.Entities.PostHashtag", b =>
+                {
+                    b.HasOne("Threads.API.Entities.Hashtag", "Hashtag")
+                        .WithMany("PostHashtags")
+                        .HasForeignKey("HashtagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Threads.API.Entities.Post", "Post")
+                        .WithMany("PostHashtags")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Hashtag");
+
+                    b.Navigation("Post");
+                });
+
+            modelBuilder.Entity("Threads.API.Entities.Repost", b =>
+                {
+                    b.HasOne("Threads.API.Entities.Post", "OriginalPost")
+                        .WithMany("Reposts")
+                        .HasForeignKey("OriginalPostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Threads.API.Entities.User", "User")
+                        .WithMany("Reposts")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("OriginalPost");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Threads.API.Entities.Story", b =>
+                {
+                    b.HasOne("Threads.API.Entities.User", "User")
+                        .WithMany("Stories")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Threads.API.Entities.StoryHashtag", b =>
+                {
+                    b.HasOne("Threads.API.Entities.Hashtag", "Hashtag")
+                        .WithMany("StoryHashtags")
+                        .HasForeignKey("HashtagId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Threads.API.Entities.Story", "Story")
+                        .WithMany("StoryHashtags")
+                        .HasForeignKey("StoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Hashtag");
+
+                    b.Navigation("Story");
+                });
+
+            modelBuilder.Entity("Threads.API.Entities.Hashtag", b =>
+                {
+                    b.Navigation("PostHashtags");
+
+                    b.Navigation("StoryHashtags");
+                });
+
             modelBuilder.Entity("Threads.API.Entities.Post", b =>
                 {
                     b.Navigation("Comments");
 
                     b.Navigation("Likes");
+
+                    b.Navigation("Pictures");
+
+                    b.Navigation("PostHashtags");
+
+                    b.Navigation("Reposts");
+                });
+
+            modelBuilder.Entity("Threads.API.Entities.Story", b =>
+                {
+                    b.Navigation("Likes");
+
+                    b.Navigation("StoryHashtags");
                 });
 
             modelBuilder.Entity("Threads.API.Entities.User", b =>
@@ -304,6 +563,10 @@ namespace Threads.API.Migrations
                     b.Navigation("Notifications");
 
                     b.Navigation("Posts");
+
+                    b.Navigation("Reposts");
+
+                    b.Navigation("Stories");
                 });
 #pragma warning restore 612, 618
         }

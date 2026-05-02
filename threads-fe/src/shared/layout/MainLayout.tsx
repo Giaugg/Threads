@@ -9,8 +9,10 @@ import { useAuth } from "../../features/auth/AuthContext";
 
 export default function MainLayout({
   children,
+  stories, // 👈 thêm prop để render story
 }: {
   children: React.ReactNode;
+  stories?: React.ReactNode;
 }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -19,6 +21,7 @@ export default function MainLayout({
   const isAuthPage = ["/login", "/register"].includes(location.pathname);
 
   const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [viewMode, setViewMode] = useState<"posts" | "stories">("posts");
 
   // ================= FETCH SUGGESTIONS =================
   useEffect(() => {
@@ -30,13 +33,10 @@ export default function MainLayout({
     try {
       const res = await getTopUsersAPI();
 
-      // ❌ loại bỏ chính mình
       let data = res.data.filter((u: any) => u.user.id !== user.id);
 
-      // 🔀 random
       const shuffled = data.sort(() => 0.5 - Math.random());
 
-      // 🎯 lấy 3-4 user
       const randomUsers = shuffled.slice(
         0,
         Math.floor(Math.random() * 2) + 3
@@ -57,7 +57,7 @@ export default function MainLayout({
     );
   }
 
-  // ================= MAIN LAYOUT =================
+  // ================= MAIN =================
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#F3F5F7] flex flex-col">
 
@@ -68,36 +68,65 @@ export default function MainLayout({
 
       <div className="flex flex-1 justify-center w-full max-w-[1280px] mx-auto">
 
-        {/* SIDEBAR LEFT */}
+        {/* LEFT SIDEBAR */}
         <aside className="hidden md:flex w-[72px] xl:w-[280px] border-r border-[#1A1A1A]">
           <Sidebar />
         </aside>
 
         {/* MAIN CONTENT */}
         <main className="flex-1 max-w-[640px]">
+
+          {/* 🔥 TOGGLE POSTS / STORIES */}
+          <div className="flex border-b border-[#1A1A1A] sticky top-[56px] bg-[#0A0A0A] z-40">
+            <button
+              onClick={() => setViewMode("posts")}
+              className={`flex-1 py-3 text-sm ${
+                viewMode === "posts"
+                  ? "border-b-2 border-white font-semibold"
+                  : "text-gray-500"
+              }`}
+            >
+              Bài viết
+            </button>
+
+            <button
+              onClick={() => setViewMode("stories")}
+              className={`flex-1 py-3 text-sm ${
+                viewMode === "stories"
+                  ? "border-b-2 border-white font-semibold"
+                  : "text-gray-500"
+              }`}
+            >
+              Story
+            </button>
+          </div>
+
+          {/* 🔥 CONTENT SWITCH */}
           <div className="h-full overflow-y-auto">
-            {children}
+            {viewMode === "posts" ? children : stories || (
+              <div className="p-6 text-center text-gray-500">
+                Không có story
+              </div>
+            )}
           </div>
         </main>
 
         {/* RIGHT SIDEBAR */}
         <aside className="hidden lg:flex w-[350px] flex-col p-6 space-y-4">
 
-          {/* ================= SUGGESTIONS ================= */}
+          {/* SUGGESTIONS */}
           <div className="rounded-2xl bg-[#121212] border border-[#1A1A1A] overflow-hidden">
             <div className="p-4">
               <h2 className="text-xl font-bold">Gợi ý cho bạn</h2>
             </div>
 
             <div className="px-1 pb-1">
-
               {suggestions.map((item) => (
                 <div
                   key={item.user.id}
                   onClick={() => navigate(`/profile/${item.user.id}`)}
                   className="group flex items-center gap-3 p-3 hover:bg-[#1A1A1A] rounded-xl cursor-pointer transition"
                 >
-                  {/* Avatar */}
                   <div className="w-10 h-10 rounded-full bg-[#262626] overflow-hidden">
                     {item.user.avatarUrl ? (
                       <img
@@ -111,7 +140,6 @@ export default function MainLayout({
                     )}
                   </div>
 
-                  {/* Info */}
                   <div className="flex-1 min-w-0">
                     <div className="font-semibold text-[14px]">
                       {item.user.username}
@@ -121,20 +149,15 @@ export default function MainLayout({
                     </div>
                   </div>
 
-                  {/* FOLLOW BUTTON */}
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      // TODO: call follow API nếu muốn
-                    }}
-                    className="bg-white text-black text-xs font-bold px-4 py-1.5 rounded-full hover:bg-gray-200"
+                    onClick={(e) => e.stopPropagation()}
+                    className="bg-white text-black text-xs font-bold px-4 py-1.5 rounded-full"
                   >
                     Theo dõi
                   </button>
                 </div>
               ))}
 
-              {/* EMPTY STATE */}
               {suggestions.length === 0 && (
                 <div className="p-4 text-gray-500 text-sm">
                   Không có gợi ý
