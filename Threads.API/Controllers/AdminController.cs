@@ -143,7 +143,8 @@ public class AdminController : ControllerBase {
             Content = dto.Content,
             ImageUrl = dto.ImageUrl,
             UserId = dto.UserId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.Now     
+
         };
 
         _context.Posts.Add(post);
@@ -287,7 +288,8 @@ public class AdminController : ControllerBase {
                 s.ExpiresAt,
                 User = new { s.User.Id, s.User.Username },
                 LikesCount = s.Likes.Count,
-                IsExpired = s.ExpiresAt <= DateTime.UtcNow
+                IsExpired = s.ExpiresAt <= DateTime.Now     
+
             })
             .ToListAsync();
 

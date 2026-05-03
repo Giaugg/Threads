@@ -83,7 +83,7 @@ public class HashtagService
         {
             Id = Guid.NewGuid(),
             Name = dto.Name.ToLower(),
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.Now     
         };
 
         _context.Hashtags.Add(hashtag);
@@ -143,7 +143,8 @@ public class HashtagService
                 {
                     Id = Guid.NewGuid(),
                     Name = hashtagName.ToLower(),
-                    CreatedAt = DateTime.UtcNow
+                   CreatedAt = DateTime.Now     
+ // Giờ Việt Nam
                 };
                 _context.Hashtags.Add(hashtag);
             }

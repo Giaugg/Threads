@@ -44,7 +44,7 @@ public class CommentsController : ControllerBase
             PostId = dto.PostId,
             ParentCommentId = dto.ParentCommentId,
             UserId = userGuid,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.Now     
         };
 
         _context.Comments.Add(comment);
@@ -59,9 +59,10 @@ public class CommentsController : ControllerBase
             await _notificationService.SendAsync(
                 post.UserId,
                 "comment",
-                $"{commenter.Username} đã bình luận bài viết của bạn",
+                $"{commenter.Username} đã bình luận bài viết của bạn \"{dto.Content}\"",
                 userGuid,
-                dto.PostId
+                dto.PostId,
+                post.Content.Substring(0, Math.Min(50, post.Content.Length))
             );
         }
 
@@ -78,7 +79,7 @@ public class CommentsController : ControllerBase
             PostId = dto.PostId,
             Content = dto.Content,
             ParentCommentId = dto.ParentCommentId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.Now     
         };
 
         _context.Comments.Add(comment);
@@ -98,9 +99,10 @@ public class CommentsController : ControllerBase
                 await _notificationService.SendAsync(
                     parentComment.UserId,
                     "comment",
-                    $"{replier.Username} đã trả lời bình luận của bạn",
+                    $"{replier.Username} đã trả lời bình luận của bạn trên bài viết {parentComment.Post.Content.Substring(0, Math.Min(50, parentComment.Post.Content.Length))}",
                     dto.UserId,
-                    dto.PostId
+                    dto.PostId,
+                    parentComment.Post.Content.Substring(0, Math.Min(50, parentComment.Post.Content.Length))
                 );
             }
         }

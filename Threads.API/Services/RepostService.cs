@@ -14,15 +14,26 @@ public class RepostService
         _context = context;
     }
 
-    public async Task<RepostDto> CreateRepost(Guid userId, CreateRepostDto dto)
+    public async Task<Repost> CreateRepost(Guid userId, CreateRepostDto dto)
     {
-        var user = await _context.Users.FindAsync(userId);
-        if (user == null) throw new KeyNotFoundException("User not found");
+        // 🔥 check post tồn tại
+        var post = await _context.Posts.FindAsync(dto.OriginalPostId);
+        if (post == null)
+            throw new KeyNotFoundException("Post not found");
 
-        var originalPost = await _context.Posts
-            .Include(p => p.User)
-            .FirstOrDefaultAsync(p => p.Id == dto.OriginalPostId);
-        if (originalPost == null) throw new KeyNotFoundException("Original post not found");
+        // 🔥 check user tồn tại (optional nhưng nên có)
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null)
+            throw new KeyNotFoundException("User not found");
+
+        // 🔥 check đã repost chưa (tránh duplicate)
+        var existed = await _context.Reposts
+            .FirstOrDefaultAsync(r =>
+                r.UserId == userId &&
+                r.OriginalPostId == dto.OriginalPostId);
+
+        if (existed != null)
+            return existed; // hoặc throw
 
         var repost = new Repost
         {
@@ -30,41 +41,13 @@ public class RepostService
             UserId = userId,
             OriginalPostId = dto.OriginalPostId,
             Caption = dto.Caption,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.Now     
         };
 
         _context.Reposts.Add(repost);
         await _context.SaveChangesAsync();
 
-        return new RepostDto
-        {
-            Id = repost.Id,
-            UserId = repost.UserId,
-            OriginalPostId = repost.OriginalPostId,
-            Caption = repost.Caption,
-            CreatedAt = repost.CreatedAt,
-            User = new UserDto
-            {
-                Id = user.Id,
-                Username = user.Username,
-                AvatarUrl = user.AvatarUrl
-            },
-            OriginalPost = new PostDto
-            {
-                Id = originalPost.Id,
-                Content = originalPost.Content,
-                ImageUrl = originalPost.ImageUrl,
-                CreatedAt = originalPost.CreatedAt,
-                User = new UserDto
-                {
-                    Id = originalPost.User.Id,
-                    Username = originalPost.User.Username,
-                    AvatarUrl = originalPost.User.AvatarUrl
-                },
-                LikesCount = originalPost.Likes.Count,
-                IsLiked = false
-            }
-        };
+        return repost;
     }
 
     public async Task<List<RepostDto>> GetUserReposts(Guid userId)

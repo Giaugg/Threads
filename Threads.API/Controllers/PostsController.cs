@@ -156,7 +156,7 @@ public class PostsController : ControllerBase
             UserId = userId,
             OriginalPostId = id,
             Content = "",
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.Now     
         };
 
         _context.Posts.Add(repost);

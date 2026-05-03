@@ -37,7 +37,7 @@ public class AuthController : ControllerBase
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password), // ✅ hash
             AvatarUrl = "https://i.pravatar.cc/150",
             Bio = "",
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.UtcNow // Giờ Việt Nam
         };
 
         _context.Users.Add(user);

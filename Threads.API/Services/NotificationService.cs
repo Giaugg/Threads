@@ -13,17 +13,17 @@ public class NotificationService
         _hub = hub;
     }
 
-    public async Task SendAsync(Guid userId, string type, string message, Guid? fromUserId = null, Guid? postId = null)
+    public async Task SendAsync(Guid userId, string type, string message, Guid? fromUserId = null, Guid? postId = null, string? content = null )
     {
         var noti = new Notification
         {
             Id = Guid.NewGuid(),
             UserId = userId,
             Type = type,
-            Message = message,
+            Message = message + (content != null ? $": \"{content}\"" : ""),
             FromUserId = fromUserId,
             PostId = postId,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = DateTime.Now,
         };
 
         _context.Notifications.Add(noti);

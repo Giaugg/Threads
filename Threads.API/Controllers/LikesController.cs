@@ -29,7 +29,8 @@ public class LikesController : ControllerBase
     {
         var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-        var existingLike = await _context.Likes.FindAsync(userId, postId);
+        var existingLike = await _context.Likes
+            .SingleOrDefaultAsync(l => l.UserId == userId && l.PostId == postId);
         if (existingLike != null) return BadRequest("Already liked");
 
         var like = new Like { UserId = userId, PostId = postId };
@@ -48,7 +49,8 @@ public class LikesController : ControllerBase
                 "like",
                 $"{likeUser.Username} đã thích bài viết của bạn",
                 userId,
-                postId
+                postId,
+                post.Content.Substring(0, Math.Min(50, post.Content.Length)) // Gửi kèm 50
             );
         }
 

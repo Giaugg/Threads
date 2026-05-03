@@ -79,9 +79,9 @@ public class AppDbContext : DbContext
                 entity.HasOne(l => l.Story)
                     .WithMany(s => s.Likes)
                     .HasForeignKey(l => l.StoryId)
-                    .IsRequired(false)
-                    .OnDelete(DeleteBehavior.Restrict);
-            });
+                    .IsRequired(false) 
+                    .OnDelete(DeleteBehavior.NoAction);
+                });
 
         // ========================
         // COMMENT
@@ -221,11 +221,7 @@ public class AppDbContext : DbContext
             .HasIndex(s => s.ExpiresAt);
 
         // LIKE -> STORY
-        modelBuilder.Entity<Like>()
-            .HasOne(l => l.Story)
-            .WithMany(s => s.Likes)
-            .HasForeignKey(l => l.StoryId)
-            .OnDelete(DeleteBehavior.NoAction);
+        
 
         modelBuilder.Entity<Post>()
         .HasOne<User>()
