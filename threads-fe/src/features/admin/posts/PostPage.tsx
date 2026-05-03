@@ -39,6 +39,7 @@ export default function PostPage() {
                 <button onClick={() => setEdit(p)}>Edit</button>
                 <DeleteBtn
                   onClick={async () => {
+                    confirm("Are you sure?") &&
                     await deletePost(p.id);
                     load();
                   }}

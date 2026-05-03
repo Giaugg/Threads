@@ -234,7 +234,6 @@ export default function ActivityPage() {
                 {notification.postId && (
                   <div className="mt-3">
                     <button
-                      onClick={() => navigate(`/post/${notification.postId}`)}
                       className="text-xs bg-[#1A1A1A] hover:bg-[#242424] px-3 py-2 rounded-lg transition"
                     >
                       Xem bài viết

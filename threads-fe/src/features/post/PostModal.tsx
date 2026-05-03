@@ -1,58 +1,199 @@
 import { useEffect, useState } from "react";
 import { getCommentsAPI, createCommentAPI, getRepliesAPI } from "./api";
 import { useToast } from "../../core/hooks/useToast";
-import { timeAgoVN } from "../../core/utils";
-import { useNavigate } from "react-router-dom";
+import { timeAgo, timeAgoVN } from "../../core/utils";
 
-export default function PostModal({ post, onClose }: any) {
-  const navigate = useNavigate();
+export default function PostModal({
+  post,
+  onClose,
+}: any) {
+  const toast = useToast();
+  const [comments, setComments] = useState<any[]>([]);
   const [content, setContent] = useState("");
-  // ... (giữ các state cũ)
+  const [replyTo, setReplyTo] = useState<string | null>(null);
+  const [replyContent, setReplyContent] = useState("");
+  const [replies, setReplies] = useState<Record<string, any[]>>({});
+  const [loadingCommentId, setLoadingCommentId] = useState<string | null>(null);
 
-  // ✅ Helper giống PostCard
-  const renderContent = (text: string) => {
-    return text.split(/(\s+)/).map((part, i) => 
-      part.startsWith("#") ? (
-        <span 
-          key={i} 
-          className="text-blue-400 cursor-pointer hover:underline"
-          onClick={() => { navigate(`/search?q=${part.replace("#", "")}`); onClose(); }}
-        >
-          {part}
-        </span>
-      ) : part
-    );
+  useEffect(() => {
+    fetchComments();
+  }, []);
+
+  const fetchComments = async () => {
+    const res = await getCommentsAPI(post.id);
+    setComments(res.data);
+
+    const repliesData: Record<string, any[]> = {};
+    for (const c of res.data) {
+      const replyRes = await getRepliesAPI(c.id);
+      repliesData[c.id] = replyRes.data;
+    }
+    setReplies(repliesData);
   };
 
+  const handleComment = async () => {
+    if (!content.trim()) {
+      toast.error("Vui lòng nhập nội dung bình luận");
+      return;
+    }
+
+    setLoadingCommentId("main");
+    const loadingId = toast.loading("Đang gửi bình luận...");
+
+    try {
+      const res = await createCommentAPI({
+        postId: post.id,
+        content,
+      });
+
+      setComments([res.data, ...comments]);
+      setContent("");
+      toast.dismiss(loadingId);
+      toast.success("Bình luận thành công", { duration: 2000 });
+    } catch (error: any) {
+      toast.dismiss(loadingId);
+      toast.error(error?.response?.data?.message || "Lỗi khi gửi bình luận");
+    } finally {
+      setLoadingCommentId(null);
+    }
+  };
+
+  const handleReply = async (parentId: string) => {
+    if (!replyContent.trim()) {
+      toast.error("Vui lòng nhập nội dung trả lời");
+      return;
+    }
+
+    setLoadingCommentId(parentId);
+    const loadingId = toast.loading("Đang gửi trả lời...");
+
+    try {
+      const res = await createCommentAPI({
+        postId: post.id,
+        content: replyContent,
+        parentCommentId: parentId,
+      });
+
+      setReplies({
+        ...replies,
+        [parentId]: [res.data, ...(replies[parentId] || [])],
+      });
+      setReplyTo(null);
+      setReplyContent("");
+      toast.dismiss(loadingId);
+      toast.success("Trả lời thành công", { duration: 2000 });
+    } catch (error: any) {
+      toast.dismiss(loadingId);
+      toast.error(error?.response?.data?.message || "Lỗi khi gửi trả lời");
+    } finally {
+      setLoadingCommentId(null);
+    }
+  };
+
+  const renderComment = (c: any, isReply = false) => (
+    <div
+      key={c.id}
+      className={`rounded-xl p-3 ${isReply ? "bg-[#141414] ml-6 border border-gray-800" : "bg-[#0f0f0f] border border-gray-700"}`}
+    >
+      <div className="flex items-center justify-between gap-3 mb-2">
+        <div>
+          <div className="text-sm font-semibold">{c.user?.username || "Unknown"}</div>
+          <div className="text-[11px] text-gray-500">{timeAgoVN(c.createdAt)}</div>
+        </div>
+        {!isReply && (
+          <button
+            onClick={() => setReplyTo(c.id)}
+            className="text-blue-400 text-xs font-medium"
+          >
+            Reply
+          </button>
+        )}
+      </div>
+      <p className="text-sm text-gray-100">{c.content}</p>
+
+      {replyTo === c.id && (
+        <div className="mt-3 space-y-2">
+          <div className="text-xs text-gray-400">Replying to {c.user?.username}</div>
+          <textarea
+            value={replyContent}
+            onChange={(e) => setReplyContent(e.target.value)}
+            placeholder="Add a reply..."
+            className="w-full min-h-[80px] rounded-xl border border-gray-700 bg-black px-3 py-2 text-sm text-white"
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleReply(c.id)}
+              className="rounded-xl bg-blue-500 px-3 py-2 text-xs font-semibold text-white"
+            >
+              Send reply
+            </button>
+            <button
+              onClick={() => setReplyTo(null)}
+              className="rounded-xl border border-gray-700 px-3 py-2 text-xs text-gray-400"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {replies[c.id]?.map((r) => renderComment(r, true))}
+    </div>
+  );
+
   return (
-    <div className="fixed inset-0 bg-black/80 flex justify-center items-start pt-10 z-50 overflow-y-auto px-4">
-      <div className="bg-[#111111] w-full max-w-2xl rounded-2xl border border-threadBorder shadow-2xl pb-10">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-threadBorder">
-          <span className="font-bold">Bài viết</span>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">Đóng</button>
+    <div className="fixed inset-0 bg-black/80 flex justify-center items-start pt-10 z-50">
+      <div className="bg-[#111111] w-full max-w-3xl rounded-3xl p-5 shadow-2xl shadow-black/50 max-h-[88vh] overflow-y-auto">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <div className="text-sm text-gray-400">Post detail</div>
+            <div className="text-xl font-semibold">{post.user?.username}</div>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-full border border-gray-700 px-3 py-2 text-gray-300 hover:bg-white/5"
+          >
+            Close
+          </button>
         </div>
 
-        {/* Post Content */}
-        <div className="p-4">
-          <div className="flex gap-3 mb-4">
-            <div className="w-10 h-10 rounded-full bg-zinc-800 overflow-hidden">
-               <img src={post.user?.avatarUrl} className="w-full h-full object-cover" alt="" />
-            </div>
+        <div className="rounded-3xl border border-gray-800 bg-[#141414] p-5 mb-5">
+          <div className="flex items-center justify-between gap-4 mb-4">
             <div>
-              <div className="font-bold text-sm">{post.user?.username}</div>
+              <div className="text-sm text-gray-400">{post.user?.username}</div>
               <div className="text-xs text-gray-500">{timeAgoVN(post.createdAt)}</div>
             </div>
           </div>
-          <div className="text-[15px] text-gray-100 whitespace-pre-wrap mb-4">
-            {renderContent(post.content)}
+          <p className="text-base leading-relaxed text-gray-100">{post.content}</p>
+        </div>
+
+        <div className="rounded-3xl border border-gray-800 bg-[#121212] p-4 mb-5">
+          <div className="text-sm text-gray-400 mb-3">Write a comment</div>
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="Share your thoughts..."
+            className="w-full min-h-[100px] rounded-3xl border border-gray-700 bg-black px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500"
+          />
+          <div className="mt-3 flex justify-end">
+            <button
+              onClick={handleComment}
+              className="rounded-3xl bg-white px-4 py-2 text-sm font-semibold text-black hover:bg-gray-100"
+            >
+              Comment
+            </button>
           </div>
-          {post.imageUrl && (
-             <img src={post.imageUrl} className="w-full rounded-xl border border-threadBorder max-h-[500px] object-contain bg-black" alt="" />
+        </div>
+
+        <div className="space-y-4">
+          {comments.length === 0 ? (
+            <div className="rounded-3xl border border-dashed border-gray-700 p-6 text-center text-sm text-gray-500">
+              No comments yet. Be the first to reply.
+            </div>
+          ) : (
+            comments.map((c) => renderComment(c))
           )}
         </div>
-        
-        {/* Input Comment & List Comments... (Giữ nguyên phần logic cũ của bạn) */}
       </div>
     </div>
   );

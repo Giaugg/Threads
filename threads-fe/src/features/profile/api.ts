@@ -23,3 +23,9 @@ export const followAPI = (id: string) =>
 
 export const unfollowAPI = (id: string) =>
   api.delete(`/users/${id}/follow`);
+
+export const getRepostsByPostAPI = (postId: string) =>
+  api.get(`/reposts/post/${postId}`);
+
+export const getUserRepostsAPI = (userId: string) =>
+  api.get(`/reposts/user/${userId}`);

@@ -5,6 +5,7 @@ import PostModal from "./PostModal";
 import { timeAgoVN } from "../../core/utils";
 import { useNavigate } from "react-router-dom";
 import { Heart, MessageCircle, Repeat2, Image as ImageIcon } from "lucide-react";
+import RepostButton from "../repost/RepostButton";
 
 export default function PostCard({ post, onUpdate }: { post: Post; onUpdate: (p: Post) => void }) {
   const [liked, setLiked] = useState(post.isLiked || false);
@@ -94,6 +95,9 @@ export default function PostCard({ post, onUpdate }: { post: Post; onUpdate: (p:
               <Repeat2 size={18} strokeWidth={1.5} />
               <span className="text-xs">{post.repostsCount || 0}</span>
             </button>
+            <div className="flex gap-4 mt-2 text-gray-400">
+              <RepostButton postId={post.id} />
+            </div>
           </div>
         </div>
       </div>

@@ -57,6 +57,10 @@ export default function MainLayout({
     );
   }
 
+  function handleFollowUser(id: any): void {
+    navigate(`/profile/${id}`);
+  }
+
   // ================= MAIN =================
   return (
     <div className="min-h-screen bg-[#0A0A0A] text-[#F3F5F7] flex flex-col">
@@ -150,7 +154,7 @@ export default function MainLayout({
                   </div>
 
                   <button
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={() => handleFollowUser(item.user.id)}
                     className="bg-white text-black text-xs font-bold px-4 py-1.5 rounded-full"
                   >
                     Theo dõi

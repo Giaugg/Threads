@@ -24,10 +24,19 @@ export default function Register() {
       return;
     }
 
-    if (form.password.length < 6) {
-      toast.error("Mật khẩu phải có ít nhất 6 ký tự");
-      return;
-    }
+  const validatePassword = (password) => {
+    // Ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt
+    const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    return regex.test(password);
+  };
+
+  // Sử dụng trong hàm handleSubmit
+  if (!validatePassword(form.password)) {
+    toast.error(
+      "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt (!@#...)"
+    );
+    return;
+  }
 
     try {
       setLoading(true);

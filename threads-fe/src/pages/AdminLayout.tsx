@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useContext } from "react";
-import { AuthContext } from "../auth/AuthContext";
+import { AuthContext } from "../features/auth/AuthContext";
 
 const tabs = [
   { id: "dashboard", label: "Dashboard", path: "/admin" },
@@ -8,7 +8,6 @@ const tabs = [
   { id: "posts", label: "Posts", path: "/admin/posts" },
   { id: "stories", label: "Stories", path: "/admin/stories" },
   { id: "hashtags", label: "Hashtags", path: "/admin/hashtags" },
-  { id: "reposts", label: "Reposts", path: "/admin/reposts" },
 ];
 
 export const AdminLayout = () => {

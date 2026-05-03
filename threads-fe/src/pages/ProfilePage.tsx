@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { useAuth } from "../auth/AuthContext";
+import { useAuth } from "../features/auth/AuthContext";
 import {
   getUserProfileAPI,
   updateProfileAPI,
@@ -10,23 +10,24 @@ import {
   checkFollowAPI,
   followAPI,
   unfollowAPI,
-} from "./api";
+  getUserRepostsAPI,
+} from "../features/profile/api";
 
-import PostCard from "../post/PostCard";
-import MainLayout from "../../shared/layout/MainLayout";
-import ImageUpload from "../../shared/components/ImageUpload";
+import PostCard from "../features/post/PostCard";
+import MainLayout from "../shared/layout/MainLayout";
+import ImageUpload from "../shared/components/ImageUpload";
 
 export default function ProfilePage() {
   const { user: currentUser } = useAuth();
-  const { userId: userIdParam } = useParams<{ userId?: string }>();
-
-  const profileUserId = userIdParam || currentUser?.id;
+  const { id } = useParams<{ id: string }>();
+  const profileUserId = id || currentUser?.id;
   const isOwnProfile = profileUserId === currentUser?.id;
 
   const [profile, setProfile] = useState<any>(null);
   const [posts, setPosts] = useState<any[]>([]);
   const [replies, setReplies] = useState<any[]>([]);
   const [media, setMedia] = useState<any[]>([]);
+  const [reposts, setReposts] = useState<any[]>([]);
 
   const [isFollowing, setIsFollowing] = useState(false);
   const [tab, setTab] = useState("posts");
@@ -57,11 +58,16 @@ export default function ProfilePage() {
       getUserPostsAPI(profileUserId!),
       getUserRepliesAPI(profileUserId!),
       getUserMediaAPI(profileUserId!),
+      getUserRepostsAPI(profileUserId!),
     ]);
+    
+    const repostsData = rp.data.map((item: any) => item.originalPost);
 
     setPosts(p.data);
     setReplies(r.data);
     setMedia(m.data);
+    setReposts(repostsData);
+    console.log("Fetched reposts:", repostsData);
   };
 
   // ================= CHECK FOLLOW =================
@@ -202,6 +208,7 @@ export default function ProfilePage() {
             { key: "posts", label: "Threads" },
             { key: "replies", label: "Replies" },
             { key: "media", label: "Media" },
+            { key: "reposts", label: "Reposts" },
           ].map((t) => (
             <button
               key={t.key}
@@ -244,6 +251,15 @@ export default function ProfilePage() {
                   className="w-full h-32 object-cover"
                 />
               ))}
+            </div>
+          )}
+
+          {/* REPOSTS */}
+          {tab === "reposts" && (
+            <div>
+              {reposts.map((p) => (
+              <PostCard key={p.id} post={p} />
+            ))}
             </div>
           )}
         </div>

@@ -70,29 +70,24 @@ export const adminAPI = {
     return res.data;
   },
 
-  // ================= HASHTAGS =================
 // ================= HASHTAGS =================
   getAllHashtags: async () => {
-    // Lưu ý: Controller của bạn chưa có phân trang [HttpGet], 
-    // nên nếu API trả về toàn bộ thì bỏ params.
-    const res = await api.get("/hashtags"); 
+    const res = await api.get("/admin/hashtags"); 
     return res.data;
   },
 
-  // KHỚP VỚI [HttpPost] CreateHashtag(CreateHashtagDto dto)
   addHashtag: async (name: string) => {
-    // Gửi Object { name } khớp với CreateHashtagDto
-    const res = await api.post("/hashtags", { name });
+    const res = await api.post(`/admin/hashtags/${name}`);
     return res.data;
   },
 
-  // KHỚP VỚI [HttpDelete("post/{postId}")]
-  // Lưu ý: Controller của bạn dùng [FromBody] cho Delete, 
-  // đây là trường hợp đặc biệt của Axios
-  removeHashtagsFromPost: async (postId: string, hashtagNames: string[]) => {
-    const res = await api.delete(`/hashtags/post/${postId}`, {
-      data: hashtagNames, // Axios yêu cầu body của DELETE nằm trong field 'data'
-    });
+  updateHashtag: async (id: string, name: string) => {
+    const res = await api.put(`/admin/hashtags/${id}`, { name: name });
+    return res.data;
+  },
+
+  deleteHashtag: async (id: string) => {
+    const res = await api.delete(`/admin/hashtags/${id}`);
     return res.data;
   },
 
@@ -101,6 +96,7 @@ export const adminAPI = {
     const res = await api.get("/admin/reposts", {
       params: { page, pageSize },
     });
+    console.log("Fetched reposts for admin:", res.data);
     return res.data;
   },
 
