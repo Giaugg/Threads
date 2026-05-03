@@ -7,3 +7,6 @@ public class HashtagDto
     public DateTime CreatedAt { get; set; }
     public int PostCount { get; set; }
 }
+public class HashtagUpdateDto {
+    public string Name { get; set; }
+}

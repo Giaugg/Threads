@@ -153,9 +153,31 @@ public class AdminController : ControllerBase {
         return Ok(new { message = "Post created", post });
     }
 
+
     // ============================================
-    // UPDATE POST
+    // DELETE POST
     // ============================================
+
+    [HttpDelete("posts/{postId}")]
+    public async Task<IActionResult> DeletePost(Guid postId)
+    {
+        var post = await _context.Posts.FindAsync(postId);
+        if (post == null) return NotFound();
+
+        // 1. Tìm và xóa tất cả Like liên quan trước
+        var relatedLikes = _context.Likes.Where(l => l.PostId == postId);
+        _context.Likes.RemoveRange(relatedLikes);
+
+        // 2. Tìm và xóa tất cả Comment liên quan (nếu có)
+        var relatedComments = _context.Comments.Where(c => c.PostId == postId);
+        _context.Comments.RemoveRange(relatedComments);
+
+        // 3. Cuối cùng mới xóa bài viết
+        _context.Posts.Remove(post);
+
+        await _context.SaveChangesAsync();
+        return Ok();
+    }
 
     [HttpPut("posts/{postId}")]
     public async Task<IActionResult> UpdatePost(Guid postId, [FromBody] UpdatePostDto dto)
@@ -171,23 +193,6 @@ public class AdminController : ControllerBase {
 
         return Ok(new { message = "Post updated", post });
     }
-
-    // ============================================
-    // DELETE POST
-    // ============================================
-
-    [HttpDelete("posts/{postId}")]
-    public async Task<IActionResult> DeletePost(Guid postId)
-    {
-        var post = await _context.Posts.FindAsync(postId);
-        if (post == null) return NotFound("Post not found");
-
-        _context.Posts.Remove(post);
-        await _context.SaveChangesAsync();
-
-        return Ok(new { message = "Post deleted" });
-    }
-
     // ============================================
     // GET POSTS
     // ============================================
@@ -222,17 +227,55 @@ public class AdminController : ControllerBase {
     // ============================================
 
     [HttpPut("hashtags/{id}")]
-    public async Task<IActionResult> UpdateHashtag(Guid id, [FromBody] string name)
+    public async Task<IActionResult> UpdateHashtag(Guid id, [FromBody] HashtagDto dto)
     {
         var hashtag = await _context.Hashtags.FindAsync(id);
         if (hashtag == null) return NotFound();
 
-        hashtag.Name = name;
+        hashtag.Name = dto.Name.Replace("#", "");
         await _context.SaveChangesAsync();
-
         return Ok(hashtag);
     }
 
+    // ============================================
+    // HASHTAG - CREATE
+    // ============================================
+
+    [HttpPost("hashtags/{name}")] // Phải thêm {name} vào route
+    public async Task<IActionResult> AddHashtag(string name) // Xóa [FromBody]
+    {
+        // Kiểm tra xem hashtag đã tồn tại chưa
+        var existingHashtag = await _context.Hashtags.FirstOrDefaultAsync(h => h.Name.ToLower() == name.ToLower());
+        if (existingHashtag != null)
+        {
+            return Ok(new HashtagDto
+            {
+                Id = existingHashtag.Id,
+                Name = existingHashtag.Name,
+                CreatedAt = existingHashtag.CreatedAt,
+                PostCount = existingHashtag.PostHashtags.Count
+            });
+        }
+
+        // Nếu chưa tồn tại, tạo hashtag mới
+        var newHashtag = new Hashtag
+        {
+            Id = Guid.NewGuid(),
+            Name = name,
+            CreatedAt = DateTime.Now
+        };
+
+        _context.Hashtags.Add(newHashtag);
+        await _context.SaveChangesAsync();
+
+        return Ok(new HashtagDto
+        {
+            Id = newHashtag.Id,
+            Name = newHashtag.Name,
+            CreatedAt = newHashtag.CreatedAt,
+            PostCount = 0
+        });
+    }
     // ============================================
     // REPOST - UPDATE
     // ============================================
@@ -301,12 +344,17 @@ public class AdminController : ControllerBase {
     public async Task<IActionResult> DeleteStory(Guid storyId)
     {
         var story = await _context.Stories.FindAsync(storyId);
-        if (story == null) return NotFound("Story not found");
+        if (story == null) return NotFound("Story không tồn tại");
 
+        // 1. Xóa tất cả các Like liên quan đến Story này
+        var relatedLikes = _context.Likes.Where(l => l.StoryId == storyId);
+        _context.Likes.RemoveRange(relatedLikes);
+
+        // 2. Xóa Story chính
         _context.Stories.Remove(story);
-        await _context.SaveChangesAsync();
 
-        return Ok(new { message = "Story deleted successfully" });
+        await _context.SaveChangesAsync();
+        return Ok(new { message = "Xóa Story thành công" });
     }
 
     // ============================================
@@ -338,13 +386,23 @@ public class AdminController : ControllerBase {
     [HttpDelete("hashtags/{hashtagId}")]
     public async Task<IActionResult> DeleteHashtag(Guid hashtagId)
     {
-        var hashtag = await _context.Hashtags.FindAsync(hashtagId);
-        if (hashtag == null) return NotFound("Hashtag not found");
+        var hashtag = await _context.Hashtags
+            .Include(h => h.PostHashtags) // Load các liên kết giữa Hashtag và Post
+            .FirstOrDefaultAsync(h => h.Id == hashtagId);
 
+        if (hashtag == null) return NotFound("Hashtag không tồn tại");
+
+        // 1. Xóa các bản ghi liên kết trong bảng trung gian trước để tránh lỗi FK
+        if (hashtag.PostHashtags.Any())
+        {
+            _context.PostHashtags.RemoveRange(hashtag.PostHashtags);
+        }
+
+        // 2. Xóa Hashtag chính
         _context.Hashtags.Remove(hashtag);
-        await _context.SaveChangesAsync();
 
-        return Ok(new { message = "Hashtag deleted successfully" });
+        await _context.SaveChangesAsync();
+        return Ok(new { message = "Đã xóa Hashtag và các liên kết liên quan" });
     }
 
     // ============================================
